@@ -14,13 +14,12 @@ import kotlinx.android.synthetic.main.activity_account.*
 import kotlinx.android.synthetic.main.content_account.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import org.blockstack.android.sdk.BlockstackConnect
 import org.blockstack.android.sdk.BlockstackSession
 import org.blockstack.android.sdk.BlockstackSignIn
-import org.blockstack.android.sdk.ui.SignInProvider
-import org.blockstack.android.sdk.ui.showBlockstackConnect
 
 
-class AccountActivity : AppCompatActivity(), SignInProvider {
+class AccountActivity : AppCompatActivity() {
     private val TAG = AccountActivity::class.java.simpleName
 
     private lateinit var blockstackSignIn: BlockstackSignIn
@@ -37,6 +36,7 @@ class AccountActivity : AppCompatActivity(), SignInProvider {
 
         val sessionStore = SessionStoreProvider.getInstance(this)
         blockstackSignIn = BlockstackSignIn(sessionStore, defaultConfig, defaultAppDetails)
+        val blockstackConnect = BlockstackConnect(sessionStore, defaultConfig, defaultAppDetails)
         blockstackSession = BlockstackSession(sessionStore, defaultConfig)
 
         if (intent?.action == Intent.ACTION_VIEW) {
@@ -44,7 +44,7 @@ class AccountActivity : AppCompatActivity(), SignInProvider {
         }
         onLoaded()
         signInButton.setOnClickListener {
-            showBlockstackConnect()
+            blockstackConnect.showDialog(this)
         }
 
         signOutButton.setOnClickListener { _ ->
@@ -117,9 +117,7 @@ class AccountActivity : AppCompatActivity(), SignInProvider {
         return super.onOptionsItemSelected(item)
     }
 
-    override fun provideBlockstackSignIn(): BlockstackSignIn {
-        return blockstackSignIn
-    }
+
 }
 
 

@@ -20,7 +20,7 @@ import org.blockstack.android.sdk.SessionStore
 
 
 class MainActivity : AppCompatActivity() {
-    private lateinit var blockstackSignIn: BlockstackSignIn
+    private lateinit var blockstackConnect: BlockstackSignIn
     private val TAG = MainActivity::class.java.simpleName
 
     private var _blockstackSession: BlockstackSession? = null
@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
         signOutButton.isEnabled = false
 
         val sessionStore = SessionStore(PreferenceManager.getDefaultSharedPreferences(this))
-        blockstackSignIn = BlockstackSignIn(sessionStore, defaultConfig, defaultAppDetails)
+        blockstackConnect = BlockstackSignIn(sessionStore, defaultConfig, defaultAppDetails)
         _blockstackSession = BlockstackSession(sessionStore, defaultConfig)
 
         val signedIn = _blockstackSession?.isUserSignedIn()
@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity() {
 
         signInButton.setOnClickListener {
             lifecycleScope.launch(Dispatchers.Main) {
-                blockstackSignIn.redirectUserToSignIn(this@MainActivity)
+                blockstackConnect.redirectUserToSignIn(this@MainActivity)
             }
         }
 

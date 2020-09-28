@@ -20,8 +20,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.blockstack.android.sdk.*
 import org.blockstack.android.sdk.model.*
-import org.blockstack.android.sdk.ui.SignInProvider
-import org.blockstack.android.sdk.ui.showBlockstackConnect
 import java.io.ByteArrayOutputStream
 import java.net.URI
 import java.net.URL
@@ -30,7 +28,7 @@ import java.util.*
 private const val username = "dev_android_sdk.id.blockstack"
 
 @SuppressLint("SetTextI18n")
-class MainActivity : AppCompatActivity(), SignInProvider {
+class MainActivity : AppCompatActivity() {
     private lateinit var network: Network
     private lateinit var blockstack: Blockstack
     private lateinit var blockstackSignIn: BlockstackSignIn
@@ -59,6 +57,7 @@ class MainActivity : AppCompatActivity(), SignInProvider {
         blockstack = Blockstack()
         _blockstackSession = BlockstackSession(sessionStore, config, blockstack = blockstack)
         blockstackSignIn = BlockstackSignIn(sessionStore, config, appDetails)
+        var blockstackConnect = BlockstackConnect(sessionStore, config, appDetails)
         network = Network("https://core.blockstack.org")
         signInButton.isEnabled = true
         getUserAppFileUrlButton.isEnabled = true
@@ -75,14 +74,14 @@ class MainActivity : AppCompatActivity(), SignInProvider {
 
 
         signInButton.setOnClickListener {
-            showBlockstackConnect()
+            blockstackConnect.showDialog(this)
         }
 
         signInButtonWithGaia.setOnClickListener {
             val key = blockstackSignIn.generateAndStoreTransitKey()
             lifecycleScope.launch(Dispatchers.Main) {
                 val authRequest = blockstackSignIn.makeAuthRequest(key, Date(System.currentTimeMillis() + 3600000).time, extraParams = mapOf(Pair("solicitGaiaHubUrl", true)))
-                blockstackSignIn.redirectToSignInWithAuthRequest(this@MainActivity, authRequest)
+                blockstackSignIn.redirectToSignInWithAuthRequest(this@MainActivity, authRequest, LEGACY_BLOCKSTACK_ID_HOST)
             }
         }
 
@@ -386,8 +385,5 @@ class MainActivity : AppCompatActivity(), SignInProvider {
         }
     }
 
-    override fun provideBlockstackSignIn(): BlockstackSignIn {
-        return blockstackSignIn
-    }
 
 }

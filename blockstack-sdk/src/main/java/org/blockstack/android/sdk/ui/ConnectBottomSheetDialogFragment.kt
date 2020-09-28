@@ -1,32 +1,47 @@
 package org.blockstack.android.sdk.ui
 
-import android.app.Activity
 import android.app.Activity.RESULT_OK
 import android.app.Dialog
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.annotation.StyleRes
 import androidx.lifecycle.coroutineScope
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import kotlinx.android.synthetic.main.fragment_connect_dialog.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.blockstack.android.sdk.BlockstackSignIn
+import org.blockstack.android.sdk.BlockstackConnect
 import org.blockstack.android.sdk.R
 
-class ConnectBottemSheetDialogFragment : BottomSheetDialogFragment() {
-    private val REQUEST_HELP = 1
-    private var blockstackSignIn: BlockstackSignIn? = null
+class ConnectBottomSheetDialogFragment : BottomSheetDialogFragment() {
+    companion object {
+        fun newInstance(): ConnectBottomSheetDialogFragment =
+                ConnectBottomSheetDialogFragment().apply {
+                    arguments = Bundle()
+                }
+    }
 
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is SignInProvider) {
-            blockstackSignIn = context.provideBlockstackSignIn()
-        } else {
-            error("ConnectDialogFragment can only be added to activities that implement ${SignInProvider::class.java}")
-        }
+    private val REQUEST_HELP = 1
+    private lateinit var blockstackConnect: BlockstackConnect
+    private var resourceTheme: Int = R.style.Theme_Blockstack
+
+    fun setBlockstackConnect(blockstackConnect: BlockstackConnect): ConnectBottomSheetDialogFragment {
+        this.blockstackConnect = blockstackConnect
+        return this
+    }
+
+    fun setTheme(@StyleRes resource: Int): ConnectBottomSheetDialogFragment {
+        resourceTheme = resource
+        return this
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        context?.theme?.applyStyle(resourceTheme, false)
+        return super.onCreateView(inflater, container, savedInstanceState)
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -38,19 +53,19 @@ class ConnectBottemSheetDialogFragment : BottomSheetDialogFragment() {
             dialog.connect_dialog_app_icon.setImageResource(applicationInfo.icon)
             dialog.connect_dialog_get_started.setOnClickListener {
                 lifecycle.coroutineScope.launch(Dispatchers.IO) {
-                    blockstackSignIn?.redirectUserToSignIn(this@apply, sendToSignIn = false)
-                    this@ConnectBottemSheetDialogFragment.dismiss()
+                    blockstackConnect.redirectUserToSignIn(this@apply, sendToSignIn = false)
+                    this@ConnectBottomSheetDialogFragment.dismiss()
                 }
             }
             dialog.connect_dialog_restore.setOnClickListener {
                 lifecycle.coroutineScope.launch(Dispatchers.IO) {
-                    blockstackSignIn?.redirectUserToSignIn(this@apply, sendToSignIn = true)
-                    this@ConnectBottemSheetDialogFragment.dismiss()
+                    blockstackConnect.redirectUserToSignIn(this@apply, sendToSignIn = true)
+                    this@ConnectBottomSheetDialogFragment.dismiss()
                 }
             }
             dialog.connect_dialog_help.setOnClickListener {
-                this@ConnectBottemSheetDialogFragment.startActivityForResult(Intent(this, ConnectHelpActivity::class.java), REQUEST_HELP)
-                this@ConnectBottemSheetDialogFragment.dismiss()
+                this@ConnectBottomSheetDialogFragment.startActivityForResult(Intent(this, ConnectHelpActivity::class.java), REQUEST_HELP)
+                this@ConnectBottomSheetDialogFragment.dismiss()
             }
         }
 
@@ -59,31 +74,11 @@ class ConnectBottemSheetDialogFragment : BottomSheetDialogFragment() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_HELP) {
-            if (resultCode == RESULT_OK) {
-                lifecycle.coroutineScope.launch(Dispatchers.IO) {
-                    blockstackSignIn?.redirectUserToSignIn(requireActivity())
-                    this@ConnectBottemSheetDialogFragment.dismiss()
-                }
+        if (requestCode == REQUEST_HELP && resultCode == RESULT_OK) {
+            lifecycle.coroutineScope.launch(Dispatchers.IO) {
+                blockstackConnect.redirectUserToSignIn(requireActivity())
+                this@ConnectBottomSheetDialogFragment.dismiss()
             }
         }
     }
-
-    companion object {
-
-        fun newInstance(): ConnectBottemSheetDialogFragment =
-                ConnectBottemSheetDialogFragment().apply {
-                    arguments = Bundle()
-                }
-    }
-}
-
-interface SignInProvider {
-    fun provideBlockstackSignIn(): BlockstackSignIn
-
-}
-
-fun AppCompatActivity.showBlockstackConnect() {
-    ConnectBottemSheetDialogFragment.newInstance()
-            .show(supportFragmentManager, "connectDialog")
 }
